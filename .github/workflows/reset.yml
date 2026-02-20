@@ -1,1 +1,24 @@
+name: Reset Timer
 
+on:
+  repository_dispatch:
+    types: [reset_timer]
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update time.json
+        run: |
+          echo "{ \"startTime\": $(date +%s000) }" > time.json
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add time.json
+          git commit -m "Global reset"
+          git push
