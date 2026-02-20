@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CUT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background: #0b0000;
+      color: #ff4d4d;
+    }
+
+    h1 {
+      font-size: 40px;
+      letter-spacing: 3px;
+    }
+
+    #timer {
+      font-size: 60px;
+      margin: 40px;
+      font-weight: bold;
+      color: #ff1a1a;
+      text-shadow: 0 0 15px #ff0000;
+    }
+
+    button {
+      padding: 14px 35px;
+      font-size: 20px;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background: #990000;
+      color: white;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #cc0000;
+      box-shadow: 0 0 20px red;
+    }
+  </style>
+</head>
+<body>
+
+<h1>CUT</h1>
+<div id="timer">Loading...</div>
+<button onclick="resetTimer()">RESET</button>
+
+<script>
+  const username = "YOUR_USERNAME";
+  const repo = "cut";
+  const token = "YOUR_TOKEN";
+
+  const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/time.json`;
+
+  let startTime = 0;
+  let fileSha = "";
+
+  async function fetchStartTime() {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    fileSha = data.sha;
+    const content = JSON.parse(atob(data.content));
+    startTime = content.startTime;
+  }
+
+  function updateTimer() {
+    if (!startTime) return;
+
+    const diff = Date.now() - startTime;
+
+    const seconds = Math.floor(diff / 1000) % 60;
+    const minutes = Math.floor(diff / (1000 * 60)) % 60;
+    const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    document.getElementById("timer").innerText =
+      `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  async function resetTimer() {
+    if (!confirm("Are you sure you want to reset the GLOBAL timer?")) return;
+
+    const newTime = Date.now();
+
+    const updatedContent = btoa(JSON.stringify({
+      startTime: newTime
+    }));
+
+    await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "Global reset",
+        content: updatedContent,
+        sha: fileSha
+      })
+    });
+
+    await fetchStartTime();
+  }
+
+  fetchStartTime().then(() => {
+    setInterval(updateTimer, 1000);
+  });
+</script>
+
+</body>
+</html>
