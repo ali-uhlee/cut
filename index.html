@@ -4,40 +4,57 @@
   <title>CUT</title>
   <style>
     body {
+      margin: 0;
+      background: #0b0000;
+      color: #ff1a1a;
       font-family: Arial, sans-serif;
       text-align: center;
-      margin-top: 100px;
-      background: #0b0000;
-      color: #ff4d4d;
+      overflow-x: hidden;
     }
 
     h1 {
-      font-size: 40px;
-      letter-spacing: 3px;
+      margin-top: 80px;
+      font-size: 50px;
+      letter-spacing: 5px;
     }
 
     #timer {
       font-size: 60px;
       margin: 40px;
-      font-weight: bold;
-      color: #ff1a1a;
-      text-shadow: 0 0 15px #ff0000;
+      text-shadow: 0 0 20px red;
     }
 
     button {
-      padding: 14px 35px;
+      padding: 15px 40px;
       font-size: 20px;
-      cursor: pointer;
+      background: #990000;
       border: none;
       border-radius: 10px;
-      background: #990000;
       color: white;
+      cursor: pointer;
       transition: 0.3s;
     }
 
     button:hover {
       background: #cc0000;
       box-shadow: 0 0 20px red;
+    }
+
+    /* Blood drip animation */
+    .drip {
+      position: fixed;
+      top: -50px;
+      width: 10px;
+      height: 50px;
+      background: red;
+      border-radius: 50%;
+      animation: drip 5s infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes drip {
+      0% { top: -50px; }
+      100% { top: 100vh; }
     }
   </style>
 </head>
@@ -48,22 +65,14 @@
 <button onclick="resetTimer()">RESET</button>
 
 <script>
-  const username = "YOUR_USERNAME";
-  const repo = "cut";
-  const token = "YOUR_TOKEN";
-
-  const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/time.json`;
+  const WORKER_URL = "PASTE_YOUR_WORKER_URL_HERE";
 
   let startTime = 0;
-  let fileSha = "";
 
-  async function fetchStartTime() {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-
-    fileSha = data.sha;
-    const content = JSON.parse(atob(data.content));
-    startTime = content.startTime;
+  async function fetchTime() {
+    const res = await fetch(WORKER_URL);
+    const data = await res.json();
+    startTime = data.startTime;
   }
 
   function updateTimer() {
@@ -81,33 +90,27 @@
   }
 
   async function resetTimer() {
-    if (!confirm("Are you sure you want to reset the GLOBAL timer?")) return;
+    const confirmReset = confirm("Remember your progress before resetting. Continue?");
+    if (!confirmReset) return;
 
-    const newTime = Date.now();
-
-    const updatedContent = btoa(JSON.stringify({
-      startTime: newTime
-    }));
-
-    await fetch(apiUrl, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "Global reset",
-        content: updatedContent,
-        sha: fileSha
-      })
-    });
-
-    await fetchStartTime();
+    await fetch(WORKER_URL, { method: "POST" });
+    await fetchTime();
   }
 
-  fetchStartTime().then(() => {
-    setInterval(updateTimer, 1000);
-  });
+  setInterval(updateTimer, 1000);
+  setInterval(fetchTime, 5000);
+
+  fetchTime();
+
+  // Create random blood drips
+  setInterval(() => {
+    const drip = document.createElement("div");
+    drip.className = "drip";
+    drip.style.left = Math.random() * 100 + "vw";
+    drip.style.animationDuration = (3 + Math.random() * 4) + "s";
+    document.body.appendChild(drip);
+    setTimeout(() => drip.remove(), 7000);
+  }, 800);
 </script>
 
 </body>
