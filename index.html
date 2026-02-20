@@ -43,7 +43,6 @@
       box-shadow: 0 0 20px red;
     }
 
-    /* Blood drip animation */
     .drip {
       position: fixed;
       top: -50px;
@@ -51,13 +50,12 @@
       height: 50px;
       background: red;
       border-radius: 50%;
-      animation: drip 5s infinite;
+      animation: drip linear forwards;
       opacity: 0.7;
     }
 
     @keyframes drip {
-      0% { top: -50px; }
-      100% { top: 100vh; }
+      to { top: 100vh; }
     }
   </style>
 </head>
@@ -68,14 +66,22 @@
 <button onclick="resetTimer()">RESET</button>
 
 <script>
-  const WORKER_URL = "PASTE_YOUR_WORKER_URL_HERE";
+  const username = "YOUR_USERNAME";
+  const repo = "cut";
+  const token = "YOUR_TOKEN";
+
+  const jsonUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/time.json`;
+
+  async function fetchTime() {
+    const res = await fetch(jsonUrl + "?t=" + Date.now());
+    const data = await res.json();
+    return data.startTime;
+  }
 
   let startTime = 0;
 
-  async function fetchTime() {
-    const res = await fetch(WORKER_URL);
-    const data = await res.json();
-    startTime = data.startTime;
+  async function init() {
+    startTime = await fetchTime();
   }
 
   function updateTimer() {
@@ -96,16 +102,31 @@
     const confirmReset = confirm("Remember your progress before resetting. Continue?");
     if (!confirmReset) return;
 
-    await fetch(WORKER_URL, { method: "POST" });
-    await fetchTime();
+    await fetch(
+      `https://api.github.com/repos/${username}/${repo}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          event_type: "reset_timer"
+        })
+      }
+    );
+
+    setTimeout(init, 3000);
   }
 
   setInterval(updateTimer, 1000);
-  setInterval(fetchTime, 5000);
 
-  fetchTime();
+  setInterval(async () => {
+    startTime = await fetchTime();
+  }, 5000);
 
-  // Create random blood drips
+  init();
+
   setInterval(() => {
     const drip = document.createElement("div");
     drip.className = "drip";
