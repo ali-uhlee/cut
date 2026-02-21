@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#990000">
-<link rel="icon" href="icon.png">
   <title>CUT</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#990000">
+  <link rel="icon" href="icon.png">
+
   <style>
     body {
       margin: 0;
@@ -66,22 +68,24 @@
 <button onclick="resetTimer()">RESET</button>
 
 <script>
-  const username = "YOUR_USERNAME";
+  const username = "ali-uhlee";
   const repo = "cut";
-  const token = "YOUR_TOKEN";
+  const branch = "main";
+  const token = "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";
 
-  const jsonUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/time.json`;
+  const jsonUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/time.json`;
+
+  let startTime = null;
 
   async function fetchTime() {
-    const res = await fetch(jsonUrl + "?t=" + Date.now());
-    const data = await res.json();
-    return data.startTime;
-  }
-
-  let startTime = 0;
-
-  async function init() {
-    startTime = await fetchTime();
+    try {
+      const res = await fetch(jsonUrl + "?nocache=" + Date.now());
+      const data = await res.json();
+      startTime = data.startTime;
+    } catch (err) {
+      document.getElementById("timer").innerText = "Error loading time.json";
+      console.error(err);
+    }
   }
 
   function updateTimer() {
@@ -116,17 +120,15 @@
       }
     );
 
-    setTimeout(init, 3000);
+    setTimeout(fetchTime, 4000);
   }
 
   setInterval(updateTimer, 1000);
+  setInterval(fetchTime, 5000);
 
-  setInterval(async () => {
-    startTime = await fetchTime();
-  }, 5000);
+  fetchTime();
 
-  init();
-
+  // Blood drip generator
   setInterval(() => {
     const drip = document.createElement("div");
     drip.className = "drip";
