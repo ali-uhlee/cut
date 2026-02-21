@@ -1,97 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>CUT</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CUT</title>
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#990000">
-  <link rel="icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      margin: 0;
-      background: #0b0000;
-      color: #ff1a1a;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      overflow-x: hidden;
-    }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cinzel', serif;
+}
 
-    h1 {
-      margin-top: 80px;
-      font-size: 50px;
-      letter-spacing: 5px;
-    }
+body {
+    height: 100vh;
+    background: linear-gradient(270deg, #000000, #1a0000, #330000, #000000);
+    background-size: 800% 800%;
+    animation: bgMove 20s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: #ff2b2b;
+}
 
-    #timer {
-      font-size: 60px;
-      margin: 40px;
-      text-shadow: 0 0 20px red;
-    }
+@keyframes bgMove {
+    0% {background-position:0% 50%}
+    50% {background-position:100% 50%}
+    100% {background-position:0% 50%}
+}
 
-    button {
-      padding: 15px 40px;
-      font-size: 20px;
-      background: #990000;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.container {
+    text-align: center;
+    padding: 40px;
+    border-radius: 25px;
+    background: rgba(20,0,0,0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(255,0,0,0.4);
+    position: relative;
+    z-index: 2;
+}
 
-    button:hover {
-      background: #cc0000;
-      box-shadow: 0 0 20px red;
-    }
+h1 {
+    font-size: 60px;
+    margin-bottom: 20px;
+    animation: flicker 3s infinite;
+}
 
-    .drip {
-      position: fixed;
-      top: -50px;
-      width: 10px;
-      height: 50px;
-      background: red;
-      border-radius: 50%;
-      animation: drip linear forwards;
-      opacity: 0.7;
-    }
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {opacity: 1;}
+    20%, 24%, 55% {opacity: 0.4;}
+}
 
-    @keyframes drip {
-      to { top: 100vh; }
-    }
-  </style>
+#timer {
+    font-size: 48px;
+    transition: all 0.3s ease;
+}
+
+button {
+    margin-top: 30px;
+    padding: 12px 30px;
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(145deg,#5a0000,#990000);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #cc0000;
+    transform: scale(1.05);
+}
+
+/* Damage Bar */
+#damageBarContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: #200000;
+}
+
+#damageBar {
+    height: 100%;
+    width: 0%;
+    background: red;
+    transition: width 1s linear;
+}
+
+/* Blood pooling */
+#bloodPool {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    background: linear-gradient(to top, #8b0000, transparent);
+    transition: height 1s ease;
+}
+
+/* Scar lines */
+.scar {
+    position: fixed;
+    width: 200px;
+    height: 3px;
+    background: rgba(255,0,0,0.6);
+    transform: rotate(25deg);
+    animation: scarFade 1.5s forwards;
+}
+
+@keyframes scarFade {
+    0% {opacity: 1;}
+    100% {opacity: 0;}
+}
+
+/* Reset animation */
+#overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+    z-index: 5;
+}
+
+.splash {
+    position: fixed;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, red 40%, transparent 70%);
+    border-radius: 50%;
+    animation: splash 1s forwards;
+    z-index: 6;
+}
+
+@keyframes splash {
+    0% {transform: scale(0.2); opacity:1;}
+    100% {transform: scale(3); opacity:0;}
+}
+
+</style>
 </head>
+
 <body>
 
-<h1>CUT</h1>
-<div id="timer">Loading...</div>
-<button onclick="resetTimer()">RESET</button>
+<div id="damageBarContainer">
+    <div id="damageBar"></div>
+</div>
+
+<div class="container">
+    <h1>CUT</h1>
+    <div id="timer">Loading...</div>
+    <button onclick="resetTimer()">Reset</button>
+</div>
+
+<div id="bloodPool"></div>
+<div id="overlay"></div>
 
 <script>
-  const username = "ali-uhlee";
-  const repo = "cut";
-  const branch = "main";
-  const token = "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";
 
-  const jsonUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/time.json`;
+let startTime = localStorage.getItem("cutStartTime");
 
-  let startTime = null;
+if (!startTime) {
+    startTime = Date.now();
+    localStorage.setItem("cutStartTime", startTime);
+}
 
-  async function fetchTime() {
-    try {
-      const res = await fetch(jsonUrl + "?nocache=" + Date.now());
-      const data = await res.json();
-      startTime = data.startTime;
-    } catch (err) {
-      document.getElementById("timer").innerText = "Error loading time.json";
-      console.error(err);
-    }
-  }
-
-  function updateTimer() {
-    if (!startTime) return;
-
-    const diff = Date.now() - startTime;
+function updateTimer() {
+    const now = Date.now();
+    const diff = now - startTime;
 
     const seconds = Math.floor(diff / 1000) % 60;
     const minutes = Math.floor(diff / (1000 * 60)) % 60;
@@ -99,44 +183,50 @@
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     document.getElementById("timer").innerText =
-      `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  }
+        `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-  async function resetTimer() {
-    const confirmReset = confirm("Remember your progress before resetting. Continue?");
-    if (!confirmReset) return;
+    // Damage bar fills over 30 days
+    let percent = Math.min((days / 30) * 100, 100);
+    document.getElementById("damageBar").style.width = percent + "%";
 
-    await fetch(
-      `https://api.github.com/repos/${username}/${repo}/dispatches`,
-      {
-        method: "POST",
-        headers: {
-          "Accept": "application/vnd.github+json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          event_type: "reset_timer"
-        })
-      }
-    );
+    // Blood pool rises over time
+    let poolHeight = Math.min(days * 2, 200);
+    document.getElementById("bloodPool").style.height = poolHeight + "px";
+}
 
-    setTimeout(fetchTime, 4000);
-  }
+setInterval(updateTimer, 1000);
+updateTimer();
 
-  setInterval(updateTimer, 1000);
-  setInterval(fetchTime, 5000);
+/* Random scar effect */
+setInterval(() => {
+    const scar = document.createElement("div");
+    scar.classList.add("scar");
+    scar.style.top = Math.random() * window.innerHeight + "px";
+    scar.style.left = Math.random() * window.innerWidth + "px";
+    document.body.appendChild(scar);
+    setTimeout(() => scar.remove(), 1500);
+}, 5000);
 
-  fetchTime();
+/* Reset with animation */
+function resetTimer() {
+    const overlay = document.getElementById("overlay");
+    overlay.style.opacity = "0.8";
 
-  // Blood drip generator
-  setInterval(() => {
-    const drip = document.createElement("div");
-    drip.className = "drip";
-    drip.style.left = Math.random() * 100 + "vw";
-    drip.style.animationDuration = (3 + Math.random() * 4) + "s";
-    document.body.appendChild(drip);
-    setTimeout(() => drip.remove(), 7000);
-  }, 800);
+    const splash = document.createElement("div");
+    splash.classList.add("splash");
+    splash.style.top = "50%";
+    splash.style.left = "50%";
+    splash.style.transform = "translate(-50%, -50%)";
+    document.body.appendChild(splash);
+
+    setTimeout(() => {
+        localStorage.setItem("cutStartTime", Date.now());
+        startTime = Date.now();
+        overlay.style.opacity = "0";
+        splash.remove();
+    }, 1000);
+}
+
 </script>
 
 </body>
